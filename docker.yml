@@ -1,0 +1,42 @@
+name: third table
+
+on:
+  schedule:
+    - cron: '0 00 * * FRI' # UTC 12am, Dubai 4am
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository code
+      - uses: actions/checkout@v4
+
+      # Step 2: Set up Docker Buildx (enhances Docker builds)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Step 3: Build the Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t third-table-app:latest .
+
+      # Step 4: Run the Docker container with the script
+      - name: Run third_table in Docker
+        env:
+          UAE_DELIVEROO_PASSWORD: ${{ secrets.UAE_DELIVEROO_PASSWORD }}
+        run: |
+          docker run --rm -e UAE_DELIVEROO_PASSWORD="$UAE_DELIVEROO_PASSWORD" third-table-app:latest
+
+# Removed Python Setup: Since Docker handles the Python environment (via the python:3.12-slim base image), we no longer need actions/setup-python@v3.
+# Docker Buildx: Added docker/setup-buildx-action@v3 to ensure Docker builds work efficiently on the runner.
+# Build Step: docker build -t third-table-app:latest . builds your image using the Dockerfile.
+# Run Step:
+    #docker run --rm runs the container and removes it after execution (keeps the runner clean).
+    #-e UAE_DELIVEROO_PASSWORD="$UAE_DELIVEROO_PASSWORD" passes the secret as an environment variable to the container.
+    #third-table-app:latest is the image tag we built.
+#Dependencies: The Dockerfile installs everything from requirements.txt, replacing the manual pip install steps.
+#Preserved Schedule and Secret: The cron schedule and UAE_DELIVEROO_PASSWORD secret usage remain unchanged.
